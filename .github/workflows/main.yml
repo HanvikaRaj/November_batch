@@ -1,0 +1,58 @@
+name: Maven Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # Job to run tests and build the project
+  maven-build:
+    runs-on: ubuntu-latest
+    
+    # Use a container to run Maven if needed
+    container:
+      image: maven:3.6.3
+
+    strategy:
+      matrix:
+        step: [verify, compile, test, package]  # Define the stages as a matrix to run them in parallel
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Maven
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'  # Specify the version of Java you are using
+
+      - name: Run ${{ matrix.step }} stage
+        run: mvn ${{ matrix.step }}
+
+      - name: Collect Checkstyle results (for ${{ matrix.step }}) 
+        if: ${{ matrix.step == 'verify' || matrix.step == 'compile' || matrix.step == 'test' || matrix.step == 'package' }}
+        run: mvn checkstyle:checkstyle  # Generate Checkstyle report for the stage
+
+      - name: Upload Checkstyle Report (for ${{ matrix.step }})
+        if: ${{ matrix.step == 'verify' || matrix.step == 'compile' || matrix.step == 'test' || matrix.step == 'package' }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: checkstyle-report-${{ matrix.step }}
+          path: target/checkstyle-result.xml  # Path to the generated checkstyle XML file
+
+  # Job to run a security scan
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run Git Secrets Scan
+        uses: awslabs/git-secrets-action@v1
+        with:
+          git-secrets-path: '/usr/local/bin/git-secrets'  # Ensure git-secrets is installed
+          git-secrets-action: 'scan'  # Scan for sensitive data
