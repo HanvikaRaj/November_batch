@@ -5,18 +5,18 @@
 # They are provided by a third-party and are governed by
 # separate terms of service, privacy policy, and support
 # documentation.
-# name: Manual Workflow
-# on:
-#   workflow_dispatch:
-#     inputs:
-#       logLevel:
-#         description: 'Log level'
-#         required: true
-#         default: 'warning'
-#       environment:
-#         description: 'Environment to deploy'
-#         required: false
-#         default: 'staging'
+name: Manual Workflow
+on:
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
+      environment:
+        description: 'Environment to deploy'
+        required: false
+        default: 'staging'
         
 jobs:
   build:
